@@ -1,0 +1,8 @@
+.chat-box-container {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  justify-content: space-around;
+  overflow: scroll;
+  scrollbar-width: none;
+}

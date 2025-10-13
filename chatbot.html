@@ -57,7 +57,7 @@
         margin-top: 1rem;
       }
 
-      .chat-box-contianer {
+      .chat-box-container {
         display: flex;
         flex-grow: 1;
         flex-direction: column;
@@ -102,35 +102,62 @@
     <script type="text/babel">
       function ChatInput({ chatMessages, setChatMessages }) {
         const [inputText, setInputText] = React.useState("");
+        const [isLoading, setIsLoading] = React.useState(false);
 
         function saveInputText(event) {
           setInputText(event.target.value);
         }
 
-        function sendMessage() {
-          const newChatMessages = [
-            ...chatMessages,
-            {
-              message: inputText,
-              sender: "user",
-              id: crypto.randomUUID(),
-            },
-          ];
-
-          setChatMessages(newChatMessages);
-
-          const response = Chatbot.getResponse(inputText);
-
-          setChatMessages([
-            ...newChatMessages,
-            {
-              message: response,
-              sender: "robot",
-              id: crypto.randomUUID(),
-            },
-          ]);
-
+        async function sendMessage() {
+          if(isLoading){
+            return;
+          }
+          
+          const messageToSend = inputText;
           setInputText("");
+
+          if (messageToSend != "") {
+            const newChatMessages = [
+              ...chatMessages,
+              {
+                message: messageToSend,
+                sender: "user",
+                id: crypto.randomUUID(),
+              },
+            ];
+
+            setChatMessages([
+              ...newChatMessages,
+              {
+                message: "Loading...",
+                sender: "robot",
+                id: crypto.randomUUID(),
+              },
+            ]);
+
+            setIsLoading(true);
+            const response = await Chatbot.getResponseAsync(messageToSend);
+            setIsLoading(false);
+
+            setChatMessages([
+              ...newChatMessages,
+              {
+                message: response,
+                sender: "robot",
+                id: crypto.randomUUID(),
+              },
+            ]);
+          }
+        }
+
+        function keyCheck(event) {
+          console.log(event);
+          if (event.key === "Enter") {
+            sendMessage();
+          }
+          if (event.key === "Escape") {
+            setInputText("");
+          }
         }
 
         return (
@@ -142,6 +169,7 @@
               onChange={saveInputText}
               value={inputText}
               className="chat-input"
+              onKeyDown={keyCheck}
             />
 
             <button className="send-button" onClick={sendMessage}>
@@ -194,14 +222,14 @@
         const chatMessagesRef = React.useRef(null);
 
         React.useEffect(() => {
-         const containerElem = chatMessagesRef.current;
-         if(containerElem){
-          containerElem.scrollTop = containerElem.scrollHeight;
-         }
+          const containerElem = chatMessagesRef.current;
+          if (containerElem) {
+            containerElem.scrollTop = containerElem.scrollHeight;
+          }
         }, [chatMessages]);
 
         return (
-          <div className="chat-box-contianer" ref={chatMessagesRef}>
+          <div className="chat-box-container" ref={chatMessagesRef}>
             {chatMessages.map((chatMessage) => {
               return (
                 <ChatMessage
